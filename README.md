@@ -8,7 +8,8 @@ can run continuously as an EDR-style monitor with a ransomware shield.
 The agent is strictly defensive. It performs no exploitation, no privilege
 escalation, no lateral movement, and no data exfiltration. See
 [`SECURITY_MODEL.md`](SECURITY_MODEL.md) for the full threat model and the list
-of capabilities that are deliberately **out of scope**.
+of capabilities that are deliberately **out of scope**, and
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for how the codebase fits together.
 
 > **Authorized use only.** Run this agent only on systems you own or are
 > explicitly authorized to assess. Hardening actions modify system
@@ -127,16 +128,53 @@ packaging, and the full CLI reference.
 
 The agent runs with **no configuration** out of the box. Optional settings:
 
-- **Environment variables** — copy [`.env.example`](.env.example) to `.env`.
-  Only two variables are read from the environment:
-  - `ENDPOINT_AGENT_LICENSE_KEY` — HMAC key for the optional license module
-    (not needed in this open-source build; nothing is gated behind a paid tier).
-  - `ENDPOINT_AGENT_UPDATE_URL` — base URL of your own release server for the
-    auto-updater. There is **no default** — the updater is a no-op unless you
-    point it at infrastructure you control.
-- **API keys, SMTP, and feed credentials** are supplied through the agent's own
-  config (config file in your home directory) and CLI flags, not through
-  environment variables.
+**Environment variables** — copy [`.env.example`](.env.example) to `.env`. Only
+two variables are read from the environment (both optional):
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `ENDPOINT_AGENT_LICENSE_KEY` | public non-secret dev key | HMAC key for the optional license module. Not needed in this open-source build — nothing is gated behind a paid tier. Set a strong random value only if you build a paid edition. |
+| `ENDPOINT_AGENT_UPDATE_URL` | _(unset → updater is a no-op)_ | Base URL of **your own** release-metadata server for the auto-updater. There is no default; only set it if you host signed release metadata for your own distribution. |
+
+**Everything else** — NVD/OTX API keys, SMTP for email delivery, threat-intel
+feed keys, and fleet enrollment tokens — is supplied through the agent's **own
+config** (JSON config file in your home directory, e.g. `~/.sentinel/`) and CLI
+flags, **not** through environment variables. No secrets are hardcoded. See
+[`SETUP.md`](SETUP.md) for the config file location and
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md#external-services--apis) for the
+full list of external services and how each is authenticated.
+
+---
+
+## Project structure
+
+```
+endpoint-security-agent/
+├── cli/            # sentinel CLI entry point + interactive cleanup wizard
+├── core/           # Agent orchestrator, scheduler, config, telemetry models,
+│                   #   profiles, daemon, allowlist, audit log, licensing
+├── scanners/       # ~21 pluggable scanners (BaseScanner subclasses)
+├── vulnerability/  # CVE lookup, local advisory DB, NVD API cache
+├── threat_intel/   # IOC/hash databases, feed adapters (abuse.ch, OTX, ET), matcher
+├── edr/            # Realtime monitors, correlation engine, event store,
+│                   #   ransomware shield, app/device control, timeline
+├── response/       # Threat-response engine, actions, playbooks, rollback, audit
+├── remediation/    # Reversible OS hardening (win/mac/linux), firewall, updater
+├── compliance/     # CIS / NIST 800-53 / SOC 2 evaluation engine
+├── reporting/      # Risk scoring, HTML/JSON reports, SIEM + email delivery
+├── fleet/          # Agent-side fleet client (registration, telemetry, policy)
+├── dashboard/      # Optional Flask fleet dashboard + REST API (SQLite)
+├── mesh/           # Optional peer-to-peer agent mesh (HMAC-signed, UDP discovery)
+├── os_modules/     # Platform abstraction layer + loader
+├── tui/            # Rich-based interactive terminal dashboard
+├── packaging/      # PyInstaller builds, service/launchd/systemd units, auto-updater
+├── tests/          # ~1,200 pytest tests
+└── docs/           # Architecture documentation
+```
+
+See **[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)** for the full architecture:
+entry points, component breakdown, scan/data flow (with diagram), data stores,
+and external services.
 
 ---
 

@@ -1,0 +1,64 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+.eggs/
+.Python
+*.spec
+
+# Build / packaging output
+dist/
+build/
+out/
+target/
+
+# Virtualenvs
+.venv/
+venv/
+env/
+ENV/
+
+# Caches
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.tox/
+htmlcov/
+.coverage
+.coverage.*
+coverage/
+coverage.xml
+
+# Agent runtime output
+sentinel_reports/
+*.jsonl
+
+# Databases / local state
+*.db
+*.sqlite
+*.sqlite3
+
+# Secrets / credentials — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id.json
+*keypair*.json
+wallet*.json
+
+# Deployment metadata
+.vercel/
+.claude/
+
+# Logs
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

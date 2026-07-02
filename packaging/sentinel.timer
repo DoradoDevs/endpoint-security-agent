@@ -1,0 +1,17 @@
+# Sentinel Agent — systemd Timer Unit
+# Runs the Sentinel scan daily at 3 AM.
+#
+# Install to: /etc/systemd/system/sentinel.timer
+# Enable: systemctl enable --now sentinel.timer
+
+[Unit]
+Description=Sentinel Security Agent — Daily Scan
+Documentation=https://github.com/sentinel-security/agent
+
+[Timer]
+OnCalendar=*-*-* 03:00:00
+RandomizedDelaySec=900
+Persistent=true
+
+[Install]
+WantedBy=timers.target

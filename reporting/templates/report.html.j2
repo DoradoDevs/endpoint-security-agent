@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentinel Security Report — {{ system_info.hostname }}</title>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --surface-2: #21262d;
+            --border: #30363d;
+            --text: #e6edf3;
+            --text-muted: #8b949e;
+            --accent: #58a6ff;
+            --critical: #f85149;
+            --high: #f0883e;
+            --medium: #d29922;
+            --low: #58a6ff;
+            --info: #8b949e;
+            --success: #3fb950;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1a1e2e 0%, #0d1117 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 32px 0;
+            margin-bottom: 24px;
+        }
+
+        .header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .header h1 span {
+            color: var(--accent);
+        }
+
+        .header .meta {
+            text-align: right;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        /* Score Card */
+        .score-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 24px;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .score-circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            font-weight: 700;
+            position: relative;
+        }
+
+        .score-circle .number {
+            font-size: 36px;
+            line-height: 1;
+        }
+
+        .score-circle .label {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+
+        .grade-excellent { background: linear-gradient(135deg, #1a3a1a, #0d2d0d); border: 3px solid var(--success); color: var(--success); }
+        .grade-good { background: linear-gradient(135deg, #1a2a1a, #0d1d0d); border: 3px solid #3fb950; color: #3fb950; }
+        .grade-fair { background: linear-gradient(135deg, #2a2a1a, #1d1d0d); border: 3px solid var(--medium); color: var(--medium); }
+        .grade-attention { background: linear-gradient(135deg, #2a1a0d, #1d0d00); border: 3px solid var(--high); color: var(--high); }
+        .grade-poor { background: linear-gradient(135deg, #2a0d0d, #1d0000); border: 3px solid var(--critical); color: var(--critical); }
+        .grade-critical { background: linear-gradient(135deg, #3a0d0d, #2d0000); border: 3px solid var(--critical); color: var(--critical); }
+
+        .score-summary h2 {
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .score-summary p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .severity-badges {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .badge .count { font-size: 24px; display: block; }
+        .badge-critical { background: rgba(248, 81, 73, 0.15); color: var(--critical); border: 1px solid rgba(248, 81, 73, 0.3); }
+        .badge-high { background: rgba(240, 136, 62, 0.15); color: var(--high); border: 1px solid rgba(240, 136, 62, 0.3); }
+        .badge-medium { background: rgba(210, 153, 34, 0.15); color: var(--medium); border: 1px solid rgba(210, 153, 34, 0.3); }
+        .badge-low { background: rgba(88, 166, 255, 0.15); color: var(--low); border: 1px solid rgba(88, 166, 255, 0.3); }
+
+        /* System Info */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .info-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .info-card .label {
+            color: var(--text-muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .info-card .value {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        /* Sections */
+        .section {
+            margin-bottom: 24px;
+        }
+
+        .section-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* Findings */
+        .finding {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--border);
+        }
+
+        .finding-critical { border-left-color: var(--critical); }
+        .finding-high { border-left-color: var(--high); }
+        .finding-medium { border-left-color: var(--medium); }
+        .finding-low { border-left-color: var(--low); }
+        .finding-info { border-left-color: var(--info); }
+
+        .finding-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .finding-title {
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .severity-tag {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        .tag-critical { background: rgba(248, 81, 73, 0.2); color: var(--critical); }
+        .tag-high { background: rgba(240, 136, 62, 0.2); color: var(--high); }
+        .tag-medium { background: rgba(210, 153, 34, 0.2); color: var(--medium); }
+        .tag-low { background: rgba(88, 166, 255, 0.2); color: var(--low); }
+        .tag-info { background: rgba(139, 148, 158, 0.2); color: var(--info); }
+
+        .finding-body {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .finding-remediation {
+            background: var(--surface-2);
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-size: 13px;
+            color: var(--success);
+        }
+
+        .finding-remediation::before {
+            content: "Remediation: ";
+            font-weight: 600;
+        }
+
+        .finding-meta {
+            display: flex;
+            gap: 16px;
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 12px;
+            border-top: 1px solid var(--border);
+            margin-top: 32px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .score-card { grid-template-columns: 1fr; text-align: center; }
+            .header .container { flex-direction: column; text-align: center; gap: 12px; }
+            .severity-badges { justify-content: center; }
+        }
+
+        @media print {
+            body { background: white; color: black; }
+            .finding { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1><span>Sentinel</span> Security Report</h1>
+            <div class="meta">
+                <div>{{ system_info.hostname }} &bull; {{ system_info.os_name }} {{ system_info.os_version }}</div>
+                <div>Scanned: {{ system_info.scan_timestamp[:19] }}</div>
+                <div>Duration: {{ scan_duration }}s &bull; {{ scanners_run | length }} scanners</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Risk Score -->
+        <div class="score-card">
+            <div class="score-circle {{ grade_class }}">
+                <span class="number">{{ risk_score }}</span>
+                <span class="label">/ 100</span>
+            </div>
+            <div class="score-summary">
+                <h2>Risk Grade: {{ risk_grade }}</h2>
+                <p>{{ grade_description }} &mdash; {{ total_findings }} findings across {{ categories | length }} categories.</p>
+            </div>
+            <div class="severity-badges">
+                {% if critical_count > 0 %}
+                <div class="badge badge-critical"><span class="count">{{ critical_count }}</span>Critical</div>
+                {% endif %}
+                {% if high_count > 0 %}
+                <div class="badge badge-high"><span class="count">{{ high_count }}</span>High</div>
+                {% endif %}
+                {% if medium_count > 0 %}
+                <div class="badge badge-medium"><span class="count">{{ medium_count }}</span>Medium</div>
+                {% endif %}
+                {% if low_count > 0 %}
+                <div class="badge badge-low"><span class="count">{{ low_count }}</span>Low</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- System Info -->
+        <div class="section">
+            <div class="section-header">System Information</div>
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="label">Operating System</div>
+                    <div class="value">{{ system_info.os_name }} {{ system_info.os_version }}</div>
+                </div>
+                <div class="info-card">
+                    <div class="label">Hostname</div>
+                    <div class="value">{{ system_info.hostname }}</div>
+                </div>
+                <div class="info-card">
+                    <div class="label">Architecture</div>
+                    <div class="value">{{ system_info.architecture }}</div>
+                </div>
+                <div class="info-card">
+                    <div class="label">CPU / Memory</div>
+                    <div class="value">{{ system_info.cpu_count }} cores / {{ system_info.total_memory_gb }} GB</div>
+                </div>
+                <div class="info-card">
+                    <div class="label">Agent Version</div>
+                    <div class="value">{{ system_info.agent_version }}</div>
+                </div>
+                <div class="info-card">
+                    <div class="label">Scanners Run</div>
+                    <div class="value">{{ scanners_run | join(', ') }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Findings by Severity -->
+        {% for severity_name, severity_findings in findings_by_severity.items() %}
+        <div class="section">
+            <div class="section-header">{{ severity_name | capitalize }} Findings ({{ severity_findings | length }})</div>
+            {% for finding in severity_findings %}
+            <div class="finding finding-{{ finding.severity }}">
+                <div class="finding-header">
+                    <span class="finding-title">{{ finding.title }}</span>
+                    <span class="severity-tag tag-{{ finding.severity }}">{{ finding.severity | upper }}</span>
+                </div>
+                <div class="finding-body">{{ finding.description }}</div>
+                {% if finding.remediation %}
+                <div class="finding-remediation">{{ finding.remediation }}</div>
+                {% endif %}
+                <div class="finding-meta">
+                    <span>Scanner: {{ finding.scanner }}</span>
+                    <span>Category: {{ finding.category }}</span>
+                    {% if finding.cve_ids %}
+                    <span>CVEs: {{ finding.cve_ids | join(', ') }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+
+        <!-- Remediation Checklist -->
+        {% if remediations %}
+        <div class="section">
+            <div class="section-header">Remediation Checklist</div>
+            {% for item in remediations %}
+            <div class="finding finding-{{ item.severity }}">
+                <div class="finding-header">
+                    <span class="finding-title">{{ item.title }}</span>
+                    <span class="severity-tag tag-{{ item.severity }}">{{ item.severity | upper }}</span>
+                </div>
+                <div class="finding-remediation">{{ item.remediation }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if errors %}
+        <div class="section">
+            <div class="section-header">Scan Errors</div>
+            {% for error in errors %}
+            <div class="finding finding-low">
+                <div class="finding-body">{{ error }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="footer">
+        Sentinel Security Agent v{{ system_info.agent_version }} &bull; Report generated {{ system_info.scan_timestamp[:19] }}
+        <br>This is a point-in-time assessment. Security posture changes continuously.
+    </div>
+</body>
+</html>

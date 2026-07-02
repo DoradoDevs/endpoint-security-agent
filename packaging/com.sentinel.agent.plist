@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Sentinel Agent — macOS LaunchDaemon
+
+  Install to: /Library/LaunchDaemons/com.sentinel.agent.plist
+
+  Load:    sudo launchctl load /Library/LaunchDaemons/com.sentinel.agent.plist
+  Unload:  sudo launchctl unload /Library/LaunchDaemons/com.sentinel.agent.plist
+  Status:  sudo launchctl list | grep sentinel
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.sentinel.agent</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/local/bin/sentinel</string>
+        <string>--daemon</string>
+        <string>--profile</string>
+        <string>standard</string>
+    </array>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/var/log/sentinel/sentinel.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/var/log/sentinel/sentinel-error.log</string>
+
+    <key>WorkingDirectory</key>
+    <string>/usr/local/lib/sentinel</string>
+
+    <key>ThrottleInterval</key>
+    <integer>30</integer>
+</dict>
+</plist>

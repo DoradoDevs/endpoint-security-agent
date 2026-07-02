@@ -1,0 +1,47 @@
+# Sentinel Agent — systemd Service Unit (Daemon Mode)
+# Install to: /etc/systemd/system/sentinel.service
+#
+# This runs Sentinel as a long-lived daemon with continuous monitoring,
+# scheduled scans, and file integrity watching.
+#
+# Enable: systemctl enable sentinel
+# Start:  systemctl start sentinel
+# Stop:   systemctl stop sentinel
+# Status: systemctl status sentinel
+# Logs:   journalctl -u sentinel -f
+#
+# For one-shot scans on a timer instead, use sentinel-scan.service + sentinel.timer.
+
+[Unit]
+Description=Sentinel Security Agent — Continuous Monitoring
+Documentation=https://github.com/sentinel-security/agent
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/sentinel --daemon --profile standard --server-mode
+ExecStop=/usr/local/bin/sentinel --stop-daemon
+Restart=on-failure
+RestartSec=30
+User=root
+Group=root
+
+# Security hardening for the service itself
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/log/sentinel /var/lib/sentinel /run
+PrivateTmp=yes
+ProtectKernelModules=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=sentinel
+
+[Install]
+WantedBy=multi-user.target

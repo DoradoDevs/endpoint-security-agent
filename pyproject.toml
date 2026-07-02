@@ -1,0 +1,70 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "endpoint-security-agent"
+version = "4.0.0"
+description = "Cross-platform defensive endpoint security agent — posture/malware/persistence scanners, CVE lookup, and EDR-style monitoring"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "DoradoDevs"},
+]
+keywords = ["security", "endpoint", "edr", "audit", "hardening", "vulnerability", "malware", "posture"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Security",
+    "Programming Language :: Python :: 3.11",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "psutil>=5.9.0",
+    "requests>=2.31.0",
+    "rich>=13.0.0",
+    "jinja2>=3.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "mypy>=1.0",
+    "ruff>=0.1.0",
+]
+fleet = [
+    "flask>=3.0.0",
+    "flask-cors>=4.0.0",
+]
+daemon = [
+    "watchdog>=3.0.0",
+]
+encryption = [
+    "cryptography>=41.0.0",
+]
+packaging = [
+    "pyinstaller>=6.0",
+]
+
+[project.scripts]
+sentinel = "cli.main:main"
+
+[tool.setuptools.packages.find]
+include = ["core*", "os_modules*", "scanners*", "vulnerability*", "remediation*", "reporting*", "cli*", "fleet*", "dashboard*", "threat_intel*", "response*", "compliance*", "mesh*", "tui*", "edr*"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
